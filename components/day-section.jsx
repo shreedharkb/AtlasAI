@@ -3,7 +3,7 @@
 
 import React, { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { MapPin, X } from "lucide-react";
+import { X } from "lucide-react";
 import { StopCard } from "./stop-card";
 import {
   DndContext,
@@ -145,17 +145,21 @@ export default function DaySection({
                 <img
                   src={destinationImage}
                   alt={day.title}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1500&q=80";
+                  }}
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/30 to-transparent pointer-events-none" />
                 
-                <div className="absolute bottom-5 left-6 z-10">
-                  <span className="font-sans text-xs uppercase tracking-widest font-semibold text-emerald-400 block mb-1">
+                <div className="absolute bottom-6 left-8 z-10">
+                  <span className="font-serif text-amber-300 font-medium text-sm sm:text-base block mb-1 italic">
                     Day {day.dayNumber}
                   </span>
                   <motion.h3
                     layoutId={`title-${day.id}-${id}`}
-                    className="font-serif text-2xl sm:text-4xl font-bold text-white tracking-tight leading-none"
+                    className="font-serif text-3xl sm:text-5xl font-bold text-white tracking-tight leading-none"
                   >
                     {day.title}
                   </motion.h3>
@@ -164,11 +168,11 @@ export default function DaySection({
 
               {/* Scrollable Modal Content (Stops List) */}
               <div className="p-6 overflow-y-auto flex-1 space-y-4">
-                <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                  <span className="font-sans text-xs uppercase tracking-wider text-white/50 font-medium">
-                    Curated Schedule ({day.stops.length} stops)
-                  </span>
-                  <span className="font-sans text-xs text-white/40">
+                <div className="flex items-center justify-between border-b border-white/10 pb-3 font-sans">
+                  <h4 className="font-serif text-white/80 font-medium text-base">
+                    Daily Schedule ({day.stops.length} stops)
+                  </h4>
+                  <span className="text-xs text-white/40 italic">
                     Drag cards to reorder
                   </span>
                 </div>
@@ -184,13 +188,13 @@ export default function DaySection({
                       strategy={verticalListSortingStrategy}
                     >
                       <div className="space-y-3">
-                        {day.stops.map((stop) => (
+                        {day.stops.map((stop, stopIndex) => (
                           <StopCard
                             key={stop.id}
                             stop={stop}
-                            onRemove={(stopId) =>
-                              onRemoveStop(dayIndex, stopId)
-                            }
+                            dayIndex={dayIndex}
+                            stopIndex={stopIndex}
+                            onRemove={() => onRemoveStop(dayIndex, stop.id)}
                             onSelect={onSelectStop}
                           />
                         ))}
@@ -223,23 +227,27 @@ export default function DaySection({
             <img
               src={destinationImage}
               alt={day.title}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1500&q=80";
+              }}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
           </motion.div>
 
           {/* Typography Header */}
           <div className="flex-1 min-w-0">
-            <span className="font-sans text-xs uppercase tracking-widest font-semibold text-emerald-400/90 block mb-1">
+            <span className="font-serif text-sm text-amber-300/90 italic block mb-0.5">
               Day {day.dayNumber}
             </span>
             <motion.h3
               layoutId={`title-${day.id}-${id}`}
-              className="font-serif text-lg sm:text-2xl font-bold text-white tracking-tight group-hover:text-emerald-300 transition-colors truncate"
+              className="font-serif text-lg sm:text-2xl font-bold text-white tracking-tight group-hover:text-amber-300 transition-colors truncate"
             >
               {day.title}
             </motion.h3>
             <p className="font-sans text-xs sm:text-sm text-white/60 mt-1 flex items-center gap-1.5 truncate">
-              <span className="text-emerald-400 font-bold">✦</span>
+              <span className="text-amber-400 font-bold">✦</span>
               <span className="truncate">
                 {day.stops.length > 0
                   ? `Highlight: ${day.stops[0].name}${day.stops.length > 1 ? ` (+ ${day.stops.length - 1} more stops)` : ""}`
@@ -256,7 +264,7 @@ export default function DaySection({
               e.stopPropagation();
               setActive(true);
             }}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-full font-sans text-xs sm:text-sm font-semibold bg-white/10 hover:bg-emerald-500 hover:text-zinc-950 text-white border border-white/15 transition-all shadow-sm"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-sans text-xs sm:text-sm font-semibold bg-white/10 hover:bg-amber-500 hover:text-zinc-950 text-white border border-white/15 transition-all shadow-sm"
           >
             Explore Day
           </button>

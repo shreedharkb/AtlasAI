@@ -33,7 +33,7 @@ export function SortableCard({ item, index, setSelectedStop, onRemove }) {
       ref={setNodeRef}
       style={style}
       className={`relative group rounded-[1.5rem] overflow-hidden border transition-colors bg-zinc-900 ${
-        isDragging ? "border-emerald-500 shadow-2xl scale-105" : "border-white/10 hover:border-white/30"
+        isDragging ? "border-amber-500 shadow-2xl scale-105" : "border-white/10 hover:border-white/30"
       }`}
     >
       <TiltedCard

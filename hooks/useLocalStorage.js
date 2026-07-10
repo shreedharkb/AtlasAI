@@ -7,7 +7,7 @@ const MAX_SESSIONS = 10;
 
 /**
  * Hook to persist trip sessions to localStorage.
- * Supports saving, loading, listing, and deleting sessions.
+ * Supports saving, loading, listing, deleting, and importing sessions.
  */
 export function useLocalStorage() {
   const [sessions, setSessions] = useState([]);
@@ -91,6 +91,33 @@ export function useLocalStorage() {
     }
   }, []);
 
+  /**
+   * Import a session object from JSON
+   */
+  const importSession = useCallback((sessionData) => {
+    if (!sessionData || !sessionData.itinerary) return null;
+    const session = {
+      id: sessionData.id || `session-${Date.now()}`,
+      prompt: sessionData.prompt || "Imported Trip",
+      itinerary: sessionData.itinerary,
+      savedAt: sessionData.savedAt || new Date().toISOString(),
+      title: sessionData.title || sessionData.itinerary?.tripTitle || "Imported Trip",
+    };
+
+    setSessions((prev) => {
+      const filtered = prev.filter((s) => s.id !== session.id);
+      const updated = [session, ...filtered].slice(0, MAX_SESSIONS);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      } catch {
+        // Ignore
+      }
+      return updated;
+    });
+
+    return session.id;
+  }, []);
+
   return {
     sessions,
     isLoaded,
@@ -98,5 +125,6 @@ export function useLocalStorage() {
     loadSession,
     deleteSession,
     clearSessions,
+    importSession,
   };
 }

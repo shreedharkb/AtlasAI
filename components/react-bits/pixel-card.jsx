@@ -69,7 +69,7 @@ export default function PixelCard({
 
       {/* Subtle Pixel Border Dots Accent on Top Corner */}
       <div className="absolute top-3 right-3 z-30 pointer-events-none flex gap-1 opacity-40">
-        <div className="w-1.5 h-1.5 rounded-none bg-emerald-400 animate-pulse" />
+        <div className="w-1.5 h-1.5 rounded-none bg-amber-400 animate-pulse" />
         <div className="w-1.5 h-1.5 rounded-none bg-white/40" />
         <div className="w-1.5 h-1.5 rounded-none bg-white/20" />
       </div>

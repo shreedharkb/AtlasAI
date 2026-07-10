@@ -54,7 +54,7 @@ export function StopCard({ stop, onRemove, onSelect }) {
         {/* Minimalist Magnet Category Circle */}
         <div className="flex-shrink-0 mt-0.5 sm:mt-0" title={cat.label}>
           <Magnet padding={20} magnetStrength={3}>
-            <div className="p-3 rounded-full bg-white/5 border border-white/10 text-white/80 group-hover:bg-white/10 group-hover:text-white transition-all shadow-sm">
+            <div className="p-2.5 rounded-2xl bg-gradient-to-br from-amber-400/15 to-amber-500/5 border border-amber-400/25 text-amber-300/90 group-hover:bg-amber-400/25 group-hover:text-amber-200 transition-all shadow-sm">
               <IconComponent className="w-4 h-4" />
             </div>
           </Magnet>
@@ -63,7 +63,7 @@ export function StopCard({ stop, onRemove, onSelect }) {
         {/* Clean Editorial Typography (Serif Title + Sans Body) */}
         <div className="flex-1 min-w-0 pr-2">
           <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 mb-1">
-            <h4 className="font-serif text-lg sm:text-xl font-medium text-white tracking-tight group-hover:text-emerald-300 transition-colors truncate">
+            <h4 className="font-serif text-lg sm:text-xl font-medium text-white tracking-tight group-hover:text-amber-300 transition-colors truncate">
               {stop.name}
             </h4>
             

@@ -1,11 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  --font-display: 'Cinzel', 'Playfair Display', Georgia, serif;
   --font-mono: var(--font-geist-mono);
   
   --animate-shimmer-slide: shimmer-slide var(--speed) ease-in-out infinite alternate;
@@ -29,6 +30,27 @@
     }
     100% {
       transform: translateZ(0) rotate(360deg);
+    }
+  }
+
+  --animate-parallax-up: parallax-up 38s linear infinite;
+  --animate-parallax-down: parallax-down 44s linear infinite;
+
+  @keyframes parallax-up {
+    0% {
+      transform: translateY(0%);
+    }
+    100% {
+      transform: translateY(-50%);
+    }
+  }
+
+  @keyframes parallax-down {
+    0% {
+      transform: translateY(-50%);
+    }
+    100% {
+      transform: translateY(0%);
     }
   }
 }
@@ -62,5 +84,14 @@
   
   h1, h2, h3, .font-editorial {
     font-family: var(--font-serif);
+  }
+}
+
+@layer utilities {
+  .animate-parallax-up {
+    animation: parallax-up 38s linear infinite;
+  }
+  .animate-parallax-down {
+    animation: parallax-down 44s linear infinite;
   }
 }

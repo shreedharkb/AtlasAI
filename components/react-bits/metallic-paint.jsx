@@ -72,7 +72,7 @@ void main(){
   float dp=texSample.r;
   float shapeMask=texSample.a;
   vec3 hi=u_lightColor*u_bright;
-  vec3 lo=u_darkColor*max(0.5, 2.-u_bright*0.6);
+  vec3 lo=u_darkColor*(2.-u_bright);
   lo.b+=smoothstep(.6,1.4,sc.x+sc.y)*.08;
   vec2 fC=sc-.5;
   float rd=length(fC+vec2(0.,sl*.15));
@@ -355,16 +355,9 @@ export default function MetallicPaint({
   const uploadTexture = useCallback(imgData => {
     const gl = glRef.current;
     const uniforms = uniformsRef.current;
-    const canvas = canvasRef.current;
-    if (!gl || !imgData || !canvas) return;
+    if (!gl || !imgData) return;
 
     if (textureRef.current) gl.deleteTexture(textureRef.current);
-
-    // Resize canvas buffer and viewport to exactly match the image aspect ratio at high DPI
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.max(1, Math.round(imgData.width * dpr));
-    canvas.height = Math.max(1, Math.round(imgData.height * dpr));
-    gl.viewport(0, 0, canvas.width, canvas.height);
 
     const tex = gl.createTexture();
     gl.activeTexture(gl.TEXTURE0);
@@ -377,8 +370,8 @@ export default function MetallicPaint({
     gl.uniform1i(uniforms.u_tex, 0);
 
     const ratio = imgData.width / imgData.height;
-    gl.uniform1f(uniforms.u_imgRatio, 1.0);
-    gl.uniform1f(uniforms.u_ratio, 1.0);
+    gl.uniform1f(uniforms.u_imgRatio, ratio);
+    gl.uniform1f(uniforms.u_ratio, 1);
 
     textureRef.current = tex;
     imgDataRef.current = imgData;
@@ -389,12 +382,12 @@ export default function MetallicPaint({
 
     const canvas = canvasRef.current;
     const gl = glRef.current;
-    const side = 600 * Math.min(window.devicePixelRatio || 1, 2);
+    const side = 1000 * devicePixelRatio;
     canvas.width = side;
     canvas.height = side;
     gl.viewport(0, 0, side, side);
 
-    queueMicrotask(() => setReady(true));
+    setReady(true);
 
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -407,7 +400,7 @@ export default function MetallicPaint({
   useEffect(() => {
     if (!ready || !imageSrc) return;
 
-    queueMicrotask(() => setTextureReady(false));
+    setTextureReady(false);
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
