@@ -2,8 +2,8 @@
 
 **Author:** Shreedhar K B  
 **Assignment:** Frontend Engineering Internship Assessment  
-**Live Demo:** [https://atalsai.vercel.app/](https://atalsai.vercel.app/)
-
+**Live Demo:** [https://atalsai.vercel.app/](https://atalsai.vercel.app/)  
+**Video Demo:** [Google Drive Link](https://drive.google.com/file/d/1oP2M6L_jw4FbMLUodHXG7X_r01Ryudnm/view?usp=sharing)
 ---
 
 ## Executive Summary & Overview

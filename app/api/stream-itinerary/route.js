@@ -111,7 +111,7 @@ export async function POST(request) {
           { role: "user", content: prompt },
         ],
         temperature: 0.7,
-        max_tokens: 4096,
+        max_tokens: 3000,
         response_format: { type: "json_object" },
         stream: true,
       }),
@@ -133,7 +133,7 @@ export async function POST(request) {
             { role: "user", content: prompt },
           ],
           temperature: 0.7,
-          max_tokens: 4096,
+          max_tokens: 3000,
           response_format: { type: "json_object" },
           stream: true,
         }),
@@ -190,6 +190,25 @@ export async function POST(request) {
                 }
               } catch {
                 // Skip malformed SSE chunks
+              }
+            }
+          }
+          
+          // Process any remaining buffer after the stream ends
+          if (buffer) {
+            const trimmed = buffer.trim();
+            if (trimmed.startsWith("data: ")) {
+              const data = trimmed.slice(6);
+              if (data !== "[DONE]") {
+                try {
+                  const parsed = JSON.parse(data);
+                  const content = parsed.choices?.[0]?.delta?.content;
+                  if (content) {
+                    streamController.enqueue(new TextEncoder().encode(content));
+                  }
+                } catch {
+                  // Skip
+                }
               }
             }
           }
