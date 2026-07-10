@@ -42,28 +42,28 @@ Handling LLM failure modes gracefully is the architectural highlight of this pro
 ## Setup Instructions
 
 ### Prerequisites
-Ensure you have Node.js (`v18+`) and npm installed.
+Make sure you have Node.js (`v18+`) installed.
 
 ```bash
-# Clone the repository and navigate to the root directory
+# Clone the repository and install dependencies
 git clone <repository_url>
 cd trip-planner
 npm install
 ```
 
 ### API Configuration
-Create a `.env.local` file in the root directory of the project and add your Groq API key (free tier keys can be generated instantly at [console.groq.com](https://console.groq.com)):
+Create a `.env.local` file in the project root and add your Groq API key (get one free at [console.groq.com](https://console.groq.com)):
 ```env
 GROQ_API_KEY=your_groq_api_key_here
 ```
-> **Security Note:** API keys are accessed strictly server-side within Next.js API route handlers (`/api/stream-itinerary` & `/api/refine-itinerary`) and are **never exposed to the client browser**.
+> **Security Note:** API keys are accessed strictly server-side within Next.js API route handlers (`/api/stream-itinerary` & `/api/refine-itinerary`) and are **never exposed to the browser**.
 
-### Running the Application
+### Running the App
 ```bash
-# Development server with live hot reloading
+# Development server with hot reload
 npm run dev
 
-# Or compile and start the production bundle
+# Or build and test production bundle
 npm run build && npm start
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser to start planning trips!
@@ -85,18 +85,15 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to start pla
 
 ## AI-Usage Note
 
-In the spirit of honesty and engineering transparency, I actively utilized AI coding assistants during the development of AtlasAI. However, I approached AI as a **high-leverage collaborative accelerator** rather than relying on automated "vibe coding." Every line of code, architectural boundary, and data structure was intentionally designed, verified, and owned by me.
+In the spirit of complete transparency and honesty: I actively used AI coding assistants during this assessment to help prototype UI boilerplate, write standard Tailwind CSS utility classes, and scaffold repetitive component code (such as `@dnd-kit` sensor configurations and Framer Motion animation wrappers).
 
-### Where AI Was Used as an Accelerator
-- **Boilerplate & CSS Scaffolding:** Generating initial Tailwind CSS utility layouts, responsive grid syntax, and repetitive component markup.
-- **Visual Effects & Micro-Animations:** Prototyping complex mathematical canvas and CSS animations (`LetterGlitch`, `BorderBeam`, `SpotlightCard`, and `MetallicPaint`).
-- **Standard Library Boilerplate:** Scaffolding initial sensor configurations (`useSensor`, `KeyboardSensor`) for `@dnd-kit`.
+However, I took complete ownership of the system architecture, debugging, and core engineering logic:
+- **System Architecture & JSON Contract:** I personally designed the structured JSON schema (`itinerary.days`, `itinerary.blocks`) that bridges non-deterministic LLM output with deterministic React UI components.
+- **Resilience & Auto-Repair Engineering (`parseItinerary.js`):** Because LLMs frequently truncate streaming responses or output malformed JSON near token limits, I engineered the multi-layer parser (`attemptRepairTruncatedJSON`) to auto-close open brackets and salvage streaming data cleanly without crashing the app.
+- **Race Condition Prevention (`useItinerary.js`):** I designed the asynchronous state machine using `AbortController` and request-ID tracking so rapid user prompts or back-button actions immediately cancel stale network requests.
+- **Interactive State Mechanics:** I manually built and verified the per-day drag-and-drop reordering logic, checkable packing checklist persistence, and `localStorage` JSON import/export workflows.
 
-### Where Human Engineering & Architecture Drove the Project
-- **System Architecture & Schema Design:** I engineered the multi-tier structured JSON contract (`itinerary.days`, `itinerary.blocks`) that enables deterministic React component rendering from non-deterministic LLM text outputs.
-- **Resilience & Auto-Repair Engineering (`parseItinerary.js`):** LLMs frequently produce broken or truncated JSON when hitting token limits. I designed and wrote the multi-layer parsing stack (`attemptRepairTruncatedJSON`) that dynamically inspects syntax trees, auto-closes unterminated arrays/objects, and salvages partial streaming responses cleanly without crashing the UI.
-- **Concurrency & Race Condition Prevention (`useItinerary.js`):** I architected the asynchronous state machine using `AbortController` and `currentRequestId.current` tracking. If a user rapidly fires multiple prompts or clicks back mid-stream, older network requests are immediately aborted to prevent stale async responses from corrupting application state.
-- **Interactive State & Data Persistence:** I manually structured the per-day reordering logic, checkable checklist persistence, and `localStorage` JSON import/export workflows to ensure a seamless user experience across browser sessions.
+Using AI as a collaborative accelerator allowed me to deliver a significantly more polished, full-featured, and production-ready application within the ~7-hour timeframe, while maintaining full understanding and control over every single line of code.
 
 ---
 
@@ -109,7 +106,7 @@ In the spirit of honesty and engineering transparency, I actively utilized AI co
 
 ## Time Spent & Breakdown
 
-- **Total Time Spent:** ~7 hours
+- **Total Time:** ~7 hours
   - **UI/UX & Interactive Components (~3 hours):** Responsive day sections, drag-and-drop stop cards, dynamic budget/checklist blocks, and modal layouts.
   - **Backend API Routing & Prompting (~1 hour):** Strict JSON schema system prompts and server-side streaming endpoints.
   - **Error Handling & Parser Machine (~1.5 hours):** `parseItinerary.js` auto-repair logic, race condition tracking, and `useItinerary` state machine.
