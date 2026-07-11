@@ -57,7 +57,7 @@ npm run build     # Production build
 
 ## System Architecture
 
-![System Architecture](/architecture.svg)
+![System Architecture](public/architecture.svg)
 
 ### Folder Structure
 
@@ -199,9 +199,9 @@ I used AI coding assistants (Gemini, Claude) extensively for implementation:
 - **Component code** — React component structure, Tailwind styling, `@dnd-kit` drag-and-drop configuration, Framer Motion animations
 - **Backend** — Next.js API routes, Groq integration, SSE stream handling
 
-I understand every line of the code, made all architectural decisions, debugged all edge cases, and wrote the test cases. AI was my implementation partner — I directed what to build and how, verified the output, and iterated on the results.
 
-> **Why this matters for the role:** The assignment brief says *"calling the model is the easy part — we're looking at how you turn unpredictable AI output into reliable UI."* My contribution was the design thinking — deciding to build a 4-layer parser, choosing the state machine pattern, designing the JSON schema contract — and using AI effectively to implement those decisions at speed.
+
+
 
 ---
 
