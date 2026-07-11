@@ -409,71 +409,127 @@ export async function GET(request) {
     });
   }
 
-  // 1. Check exact location / destination keywords in our high-res 4K atlas first
-  for (const [key, photos] of Object.entries(HIGH_RES_ATLAS)) {
-    if (combined.includes(key)) {
-      const selectedUrl = photos[effectiveIndex % photos.length];
-      imageCache.set(cacheKey, selectedUrl);
-      return NextResponse.redirect(selectedUrl, {
-        status: 307,
-        headers: { "Cache-Control": "public, max-age=86400, s-maxage=86400" },
-      });
+  // Helper: create a redirect response and cache it
+  const respond = (url) => {
+    imageCache.set(cacheKey, url);
+    return NextResponse.redirect(url, {
+      status: 307,
+      headers: { "Cache-Control": "public, max-age=86400, s-maxage=86400" },
+    });
+  };
+
+  // ── Step 1: Try SPECIFIC landmark keywords first (high-priority exact matches) ──
+  // Check query first (it usually contains the stop name like "Colva Beach"), then dest
+  for (const text of [query, dest]) {
+    if (!text) continue;
+    for (const [key, photos] of Object.entries(HIGH_RES_ATLAS)) {
+      // Only match if the key is a meaningful substring (skip very short keys to avoid false positives)
+      if (key.length >= 3 && text.includes(key)) {
+        return respond(photos[effectiveIndex % photos.length]);
+      }
     }
   }
 
-  // 2. Check activity keywords if no specific destination matched
+  // Also check combined for broader matches
+  for (const [key, photos] of Object.entries(HIGH_RES_ATLAS)) {
+    if (key.length >= 3 && combined.includes(key)) {
+      return respond(photos[effectiveIndex % photos.length]);
+    }
+  }
+
+  // ── Step 2: Activity/theme keyword match ──
   for (const [key, photos] of Object.entries(ACTIVITY_POOLS)) {
     if (combined.includes(key)) {
-      const selectedUrl = photos[effectiveIndex % photos.length];
-      imageCache.set(cacheKey, selectedUrl);
-      return NextResponse.redirect(selectedUrl, {
-        status: 307,
-        headers: { "Cache-Control": "public, max-age=86400, s-maxage=86400" },
-      });
+      return respond(photos[effectiveIndex % photos.length]);
     }
   }
 
-  // 3. Dynamic Wikipedia Image Fetch for any unique location/stop on Earth
-  let cleanTerm = (dest || query || "travel landmark")
-    .replace(/^day\s*\d+[:\-]\s*/i, "")
-    .replace(/^stop\s*\d+[:\-]\s*/i, "")
-    .replace(/day\s*\d+/ig, "")
-    .replace(/stop\s*\d+/ig, "")
-    .trim();
+  // ── Step 3: Extract a clean search term for external lookups ──
+  // The `dest` param often contains poetic titles like "Sun, Sand, and Serenity in Goa"
+  // We need to extract just the place name for Wikipedia/Unsplash searches
+  let cleanTerm = extractPlaceName(query, dest);
 
   if (!cleanTerm) cleanTerm = "scenic travel destination";
 
+  // ── Step 4: Wikipedia image lookup (real photography of real places) ──
   try {
     const wikiRes = await fetch(
-      `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cleanTerm)}&gsrlimit=1&prop=pageimages&pithumbsize=1600&format=json`,
-      { signal: AbortSignal.timeout(1200) }
+      `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cleanTerm)}&gsrlimit=3&prop=pageimages&pithumbsize=1600&format=json`,
+      { signal: AbortSignal.timeout(3000) }
     );
     if (wikiRes.ok) {
       const wikiData = await wikiRes.json();
       if (wikiData?.query?.pages) {
         const pages = Object.values(wikiData.query.pages);
-        if (pages.length > 0 && pages[0].thumbnail?.source) {
-          const wikiImageUrl = pages[0].thumbnail.source;
-          // Verify it's a valid raster image format
-          if (!wikiImageUrl.endsWith(".svg") && !wikiImageUrl.endsWith(".pdf") && wikiImageUrl.startsWith("http")) {
-            imageCache.set(cacheKey, wikiImageUrl);
-            return NextResponse.redirect(wikiImageUrl, {
-              status: 307,
-              headers: { "Cache-Control": "public, max-age=86400, s-maxage=86400" },
-            });
+        // Find the first page that actually has an image
+        for (const page of pages) {
+          if (page.thumbnail?.source) {
+            const wikiImageUrl = page.thumbnail.source;
+            if (!wikiImageUrl.endsWith(".svg") && !wikiImageUrl.endsWith(".pdf") && wikiImageUrl.startsWith("http")) {
+              return respond(wikiImageUrl);
+            }
           }
         }
       }
     }
   } catch {
-    // If Wikipedia query times out or fails, proceed to reliable general travel photo below
+    // Wikipedia timed out or failed — continue to Unsplash fallback
   }
 
-  // 4. Fallback to our curated High-Res 4K General Travel Pool (100% reliable CDN, instant loading, no broken image boxes)
-  const selectedUrl = GENERAL_TRAVEL_POOL[effectiveIndex % GENERAL_TRAVEL_POOL.length];
-  imageCache.set(cacheKey, selectedUrl);
-  return NextResponse.redirect(selectedUrl, {
-    status: 307,
-    headers: { "Cache-Control": "public, max-age=86400, s-maxage=86400" },
-  });
+  // ── Step 5: Unsplash source (direct, no API key needed) ──
+  // Uses source.unsplash.com which serves a random photo matching the search term
+  try {
+    const unsplashUrl = `https://source.unsplash.com/1600x900/?${encodeURIComponent(cleanTerm + " travel")}`;
+    const unsplashRes = await fetch(unsplashUrl, {
+      method: "HEAD",
+      redirect: "follow",
+      signal: AbortSignal.timeout(2000),
+    });
+    if (unsplashRes.ok && unsplashRes.url && !unsplashRes.url.includes("source-404")) {
+      return respond(unsplashRes.url);
+    }
+  } catch {
+    // Unsplash fallback failed — use general pool
+  }
+
+  // ── Step 6: General travel pool (100% reliable, instant) ──
+  return respond(GENERAL_TRAVEL_POOL[effectiveIndex % GENERAL_TRAVEL_POOL.length]);
 }
+
+/**
+ * Extract an actual place/landmark name from the query and destination strings.
+ * Strips out poetic/generic words so Wikipedia gets a useful search term.
+ */
+function extractPlaceName(query, dest) {
+  // Priority 1: Use query if it looks like a specific place name (not just a category)
+  if (query) {
+    let cleaned = query
+      .replace(/\b(nature|culture|food|adventure|shopping|transport|accommodation|nightlife|relaxation|other)\b/gi, "")
+      .replace(/\b(day\s*\d+|stop\s*\d+)\b/gi, "")
+      .replace(/\b(morning|afternoon|evening|night|exploration|departure|arrival)\b/gi, "")
+      .trim();
+    // If after cleaning we still have 2+ meaningful characters, use it
+    if (cleaned.length >= 3) return cleaned;
+  }
+
+  // Priority 2: Extract place name from destination (strip poetic fluff)
+  if (dest) {
+    let cleaned = dest
+      // Remove common poetic patterns: "Sun, Sand, and Serenity in X" → "X"
+      .replace(/^.*?\b(in|of|to|through|across|around)\b\s*/i, "")
+      // Remove trailing noise
+      .replace(/\b(trip|tour|adventure|journey|exploration|getaway|vacation|holiday|itinerary)\b/gi, "")
+      .replace(/\b(day|days|night|nights|\d+)\b/gi, "")
+      .replace(/[,\-–—]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (cleaned.length >= 2) return cleaned;
+
+    // If the above stripped too much, just use the raw dest
+    return dest.replace(/\b(trip|tour|adventure|journey)\b/gi, "").trim();
+  }
+
+  return "";
+}
+

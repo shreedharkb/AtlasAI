@@ -2,7 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import * as LucideIcons from "lucide-react";
+import { resolveIcon, GripVertical, Info, Trash2, Check } from "@/lib/iconResolver";
 import Magnet from "@/components/react-bits/magnet";
 import { CATEGORIES } from "@/lib/constants";
 
@@ -24,7 +24,7 @@ export function StopCard({ stop, onRemove, onSelect }) {
   };
 
   const cat = CATEGORIES[stop.category] || CATEGORIES.other;
-  const IconComponent = LucideIcons[cat.iconName] || LucideIcons.MapPin;
+  const IconComponent = resolveIcon(cat.iconName);
 
   return (
     <div
@@ -48,7 +48,7 @@ export function StopCard({ stop, onRemove, onSelect }) {
           title="Drag to reorder"
           aria-label="Drag to reorder stop"
         >
-          <LucideIcons.GripVertical className="w-4 h-4" />
+          <GripVertical className="w-4 h-4" />
         </button>
 
         {/* Minimalist Magnet Category Circle */}
@@ -96,7 +96,7 @@ export function StopCard({ stop, onRemove, onSelect }) {
             title="View details"
             aria-label={`View details for ${stop.name}`}
           >
-            <LucideIcons.Info className="w-4 h-4" />
+            <Info className="w-4 h-4" />
           </button>
         </Magnet>
 
@@ -107,7 +107,7 @@ export function StopCard({ stop, onRemove, onSelect }) {
             title="Remove stop"
             aria-label={`Remove ${stop.name}`}
           >
-            <LucideIcons.Trash2 className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" />
           </button>
         </Magnet>
       </div>

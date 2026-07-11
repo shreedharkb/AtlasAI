@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import * as LucideIcons from "lucide-react";
+import { Check } from "lucide-react";
+import { resolveBlockIcon } from "@/lib/iconResolver";
 import TiltedCard from "@/components/react-bits/tilted-card";
 
 /**
@@ -126,7 +127,7 @@ function ChecklistBlock({ block }) {
                   : "border-white/20 bg-white/[0.02] group-hover:border-white/40"
               }`}
             >
-              {checked.has(i) && <LucideIcons.Check className="w-3.5 h-3.5 stroke-[3]" />}
+              {checked.has(i) && <Check className="w-3.5 h-3.5 stroke-[3]" />}
             </div>
             <span
               className={`font-sans text-sm leading-snug transition-all ${
@@ -192,7 +193,7 @@ const BLOCK_ICONS = {
  */
 export default function BlockCard({ block }) {
   const iconName = BLOCK_ICONS[block.type] || "FileText";
-  const IconComponent = LucideIcons[iconName] || LucideIcons.FileText;
+  const IconComponent = resolveBlockIcon(iconName);
 
   const isChart = block.type === "budget" || block.type === "chart";
   const isChecklist = block.type === "checklist";

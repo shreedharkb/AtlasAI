@@ -1,61 +1,8 @@
 import { NextResponse } from "next/server";
+import { REFINE_SYSTEM_PROMPT, MAX_PROMPT_LENGTH } from "@/lib/prompts";
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-const SYSTEM_PROMPT = `You are a professional travel planner AI. The user has an existing trip itinerary and wants to modify it based on their follow-up request.
-
-You will receive the current itinerary as JSON and a modification request. You must return the COMPLETE UPDATED itinerary in the same JSON format — not just the changes.
-
-The JSON must follow this exact structure:
-{
-  "tripTitle": "string",
-  "summary": "string",
-  "days": [
-    {
-      "dayNumber": 1,
-      "title": "string",
-      "stops": [
-        {
-          "id": "string",
-          "name": "string",
-          "time": "string",
-          "duration": "string",
-          "description": "string",
-          "category": "string - one of: culture, food, nature, shopping, transport, accommodation, adventure, nightlife, relaxation",
-          "tips": "string"
-        }
-      ]
-    }
-  ],
-  "blocks": [
-    {
-      "type": "budget",
-      "title": "Estimated Budget Breakdown",
-      "items": [
-        { "label": "Accommodation", "amount": 150, "currency": "USD" },
-        { "label": "Food & Dining", "amount": 80, "currency": "USD" }
-      ]
-    },
-    {
-      "type": "checklist",
-      "title": "Packing Essentials",
-      "items": ["string"]
-    },
-    {
-      "type": "tips",
-      "title": "Local Travel Tips",
-      "items": ["string"]
-    }
-  ]
-}
-
-Rules:
-- Return ONLY valid JSON, no markdown, no explanation.
-- Keep stops and blocks the user hasn't asked to change.
-- Maintain logical time flow when adding/moving stops.
-- Generate new unique IDs for any new stops (format: "stop-{dayNumber}-{stopNumber}").
-- ALWAYS include the "blocks" array preserving or updating existing budget, checklist, and tips blocks.
-- Update the trip title and summary if the changes warrant it.`;
 
 export async function POST(request) {
   const apiKey = process.env.GROQ_API_KEY;
@@ -85,6 +32,8 @@ export async function POST(request) {
     );
   }
 
+  const sanitizedPrompt = prompt.trim().slice(0, MAX_PROMPT_LENGTH);
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -94,7 +43,7 @@ export async function POST(request) {
 ${JSON.stringify(currentItinerary, null, 2)}
 \`\`\`
 
-User's modification request: "${prompt}"
+User's modification request: "${sanitizedPrompt}"
 
 Return the COMPLETE updated itinerary as JSON.`;
 
@@ -107,11 +56,11 @@ Return the COMPLETE updated itinerary as JSON.`;
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: REFINE_SYSTEM_PROMPT },
           { role: "user", content: userMessage },
         ],
         temperature: 0.7,
-        max_tokens: 3000,
+        max_tokens: 4096,
         response_format: { type: "json_object" },
       }),
       signal: controller.signal,
@@ -128,11 +77,11 @@ Return the COMPLETE updated itinerary as JSON.`;
         body: JSON.stringify({
           model: "llama-3.1-8b-instant",
           messages: [
-            { role: "system", content: SYSTEM_PROMPT },
+            { role: "system", content: REFINE_SYSTEM_PROMPT },
             { role: "user", content: userMessage },
           ],
           temperature: 0.7,
-          max_tokens: 3000,
+          max_tokens: 4096,
           response_format: { type: "json_object" },
         }),
         signal: controller.signal,

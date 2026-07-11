@@ -1,70 +1,7 @@
 import { NextResponse } from "next/server";
+import { GENERATE_SYSTEM_PROMPT, MAX_PROMPT_LENGTH } from "@/lib/prompts";
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-
-const SYSTEM_PROMPT = `You are a professional travel planner AI. When given a trip description, return a JSON object (and nothing else — no markdown, no explanation, just raw JSON).
-
-The JSON must follow this exact structure:
-{
-  "tripTitle": "string - a catchy title for the trip",
-  "summary": "string - 1-2 sentence overview of the trip",
-  "days": [
-    {
-      "dayNumber": 1,
-      "title": "string - theme for the day",
-      "stops": [
-        {
-          "id": "string - unique id like 'stop-1-1'",
-          "name": "string - place or activity name",
-          "time": "string - suggested time e.g. '9:00 AM'",
-          "duration": "string - e.g. '2 hours'",
-          "description": "string - 1-2 sentences about this stop",
-          "category": "string - one of: culture, food, nature, shopping, transport, accommodation, adventure, nightlife, relaxation",
-          "tips": "string - practical tip for this stop"
-        }
-      ]
-    }
-  ],
-  "blocks": [
-    {
-      "type": "budget",
-      "title": "Estimated Budget Breakdown",
-      "items": [
-        { "label": "Accommodation", "amount": 150, "currency": "USD" },
-        { "label": "Food & Dining", "amount": 80, "currency": "USD" },
-        { "label": "Transport", "amount": 40, "currency": "USD" },
-        { "label": "Activities", "amount": 60, "currency": "USD" },
-        { "label": "Shopping & Misc", "amount": 30, "currency": "USD" }
-      ]
-    },
-    {
-      "type": "checklist",
-      "title": "Packing Essentials",
-      "items": ["Passport", "Comfortable walking shoes", "Sunscreen", "Camera", "Power adapter"]
-    },
-    {
-      "type": "tips",
-      "title": "Local Travel Tips",
-      "items": [
-        "string - practical travel tip 1",
-        "string - practical travel tip 2",
-        "string - practical travel tip 3"
-      ]
-    }
-  ]
-}
-
-Rules:
-- Return ONLY valid JSON. No markdown, no code blocks, no explanation.
-- Each day should have 3-6 stops.
-- Use realistic timings.
-- Categories: culture, food, nature, shopping, transport, accommodation, adventure, nightlife, relaxation.
-- IDs must be unique (format: "stop-{dayNumber}-{stopNumber}").
-- ALWAYS include the "blocks" array with budget, checklist, and tips blocks.
-- Budget amounts should be realistic per-day estimates in the local currency.
-- Packing checklist should be trip-specific (cold weather gear for mountains, swimwear for beaches, etc).
-- Include 3-5 local travel tips.
-- Be creative and include local recommendations.`;
 
 export async function POST(request) {
   const apiKey = process.env.GROQ_API_KEY;
@@ -94,6 +31,9 @@ export async function POST(request) {
     );
   }
 
+  // Cap prompt length to prevent token-limit abuse
+  const sanitizedPrompt = prompt.trim().slice(0, MAX_PROMPT_LENGTH);
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 45000);
 
@@ -107,11 +47,11 @@ export async function POST(request) {
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: prompt },
+          { role: "system", content: GENERATE_SYSTEM_PROMPT },
+          { role: "user", content: sanitizedPrompt },
         ],
         temperature: 0.7,
-        max_tokens: 3000,
+        max_tokens: 4096,
         response_format: { type: "json_object" },
         stream: true,
       }),
@@ -129,11 +69,11 @@ export async function POST(request) {
         body: JSON.stringify({
           model: "llama-3.1-8b-instant",
           messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            { role: "user", content: prompt },
+            { role: "system", content: GENERATE_SYSTEM_PROMPT },
+            { role: "user", content: sanitizedPrompt },
           ],
           temperature: 0.7,
-          max_tokens: 3000,
+          max_tokens: 4096,
           response_format: { type: "json_object" },
           stream: true,
         }),
