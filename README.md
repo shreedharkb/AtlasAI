@@ -1,9 +1,9 @@
 # AtlasAI — Interactive AI Trip Planner
 
 **Author:** Shreedhar K B  
-**Roll No.:** 23BCS126
-**Branch:** CSE
-**Year:** 2027
+**Roll No.:** 23BCS126  
+**Branch:** CSE  
+**Year:** 2027  
 **Assignment:** Frontend Engineering Internship Assessment  
 **Live Demo:** [atlas-ai-teal.vercel.app](https://atlas-ai-teal.vercel.app/)  
 **Video Demo:** [Watch on Google Drive](https://drive.google.com/file/d/1oP2M6L_jw4FbMLUodHXG7X_r01Ryudnm/view?usp=sharing)
@@ -57,62 +57,7 @@ npm run build     # Production build
 
 ## System Architecture
 
-> The diagram below renders on GitHub. See the folder tree underneath for a quick local reference.
-
-```mermaid
-graph TB
-    subgraph Client["Frontend · React / Next.js App Router"]
-        Page["page.js Orchestrator"]
-        
-        subgraph Views["View Layer"]
-            IV["IdleView"]
-            LV["LoadingView"]
-            SV["SuccessView"]
-            EV["ErrorView"]
-        end
-
-        subgraph Components["Interactive Components"]
-            DS["DaySection"]
-            SC["StopCard"]
-            BC["BlockCard"]
-            SD["SessionDrawer"]
-        end
-
-        subgraph Hooks["State Management"]
-            UIT["useItinerary"]
-            ULS["useLocalStorage"]
-        end
-
-        subgraph Lib["Core Libraries"]
-            PI["parseItinerary.js"]
-            PR["prompts.js"]
-        end
-    end
-
-    subgraph Server["API Routes · Server-Side"]
-        SI["/api/stream-itinerary"]
-        RI["/api/refine-itinerary"]
-        DI["/api/destination-image"]
-    end
-
-    subgraph Ext["External Services"]
-        Groq["Groq API · llama-3.3-70b"]
-        Wiki["Wikipedia Images"]
-        Unsp["Unsplash CDN"]
-    end
-
-    Page --> Views
-    Page --> Hooks
-    SV --> Components
-    UIT --> SI
-    UIT --> RI
-    UIT --> PI
-    SI --> Groq
-    RI --> Groq
-    DI --> Wiki
-    DI --> Unsp
-    DS --> SC
-```
+![System Architecture](/architecture.svg)
 
 ### Folder Structure
 
